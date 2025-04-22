@@ -78,7 +78,8 @@ flutter:
   fonts:
     - family: LexendDeca
       fonts:
-        - asset: fonts/LexendDeca-Regular.ttf  
+        - asset: fonts/LexendDeca-Regular.ttf 
+        - asset: fonts/LexendDeca-Bold.ttf 
   
   # fonts:
   #   - family: Schyler
