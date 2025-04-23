@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:news_app_202504/providers/articles_provider.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title});
-
   final String title;
+
+  // mian.dartから渡された「今のモード」と「切替関数」をコンストラクタで受け取る
+  final bool isDarkMode;
+  final ValueChanged<bool> onThemeToggle;
+
+  const HomePage({
+    Key? key,
+    required this.title,
+    required this.isDarkMode,
+    required this.onThemeToggle,
+  }) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  var _checked = false;
+  var isDarkMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +62,12 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(width: 10),
                       Transform.scale(
                         scale: 0.8,
-                        child: Switch(value: _checked, onChanged: _onToggle),
+                        child: Switch(
+                          value: widget.isDarkMode, // 親の _mode == dark を反映
+                          onChanged:
+                              widget
+                                  .onThemeToggle, // 親の setState() を呼ぶ（親を更新 → アプリ再描画）
+                        ),
                       ),
                       SizedBox(width: 10),
                       Icon(Icons.nightlight_round),
@@ -95,9 +111,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _onToggle(bool? value) {
+  void _onThemeToggle(bool? value) {
     setState(() {
-      _checked = value!;
+      isDarkMode = value!;
     });
   }
 
