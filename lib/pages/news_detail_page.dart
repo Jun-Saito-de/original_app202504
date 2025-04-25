@@ -19,6 +19,8 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   String? _error;
   int _currentIndex = 0;
 
+  final Set<String> _favoriteTitles = {}; // タイトルをキーにしてファボを登録
+
   @override
   void initState() {
     super.initState();
@@ -47,7 +49,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       return Center(child: Text('エラー: $_error'));
     }
     final detail = _detail!;
-    final Set<String> _favoriteTitles = {}; // タイトルをキーにしてファボを登録
+
     final isFav = _favoriteTitles.contains(
       widget.title,
     ); // ファボ登録記事がタイトルを含んでいたらisFavがtrue
@@ -91,7 +93,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    Icon(Icons.text_fields),
+                    IconButton(icon: Icon(Icons.text_fields), onPressed: () {}),
                     SizedBox(width: 12.0),
                     IconButton(
                       icon: Icon(
@@ -99,7 +101,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                         color:
                             isFav
                                 ? Theme.of(context).colorScheme.secondary
-                                : Colors.black,
+                                : Colors.grey,
                       ),
                       onPressed: () {
                         setState(() {
@@ -111,7 +113,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       },
                     ),
                     SizedBox(width: 12.0),
-                    Icon(Icons.share),
+                    IconButton(icon: Icon(Icons.share), onPressed: () {}),
                   ],
                 ),
               ),

@@ -5,43 +5,42 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:news_app_202504/models/article_detail.dart'; // detail用のモデルをインポート
 
 // APIを使うクラス(// ニュース取得ロジックをまとめるクラス)
-
 class NewsApi {
   // API KEYを使う変数
   final String _apiKey =
       dotenv.env['NEWS_API_KEY'] ?? ''; // ▶ 取得した API キーを保持（実運用では秘匿）
-  // 日本の情報のURL (ベースとなるエンドポイントの URL)
   static const String _baseUrl = 'https://newsapi.org/v2/top-headlines';
 
-  // APIからデータを取得するメソッド（JSON読み込み関数）
+  // 🔥 ログ付きのニュース取得関数（一覧）
   Future<List<NewsDetailData>> loadNews({String country = 'us'}) async {
-    // getメソッドでデータを取得
-    // parseメソッドの引数にURIのテキストを指定。このURIにhttpsが指定されていればhttpsでアクセスを行う
-    // ─── 1) GET リクエストを送信 ─────────────────
-    final http.Response response = await http.get(
-      Uri.parse('$_baseUrl?country=$country&apiKey=$_apiKey'),
-    );
+    final uri = '$_baseUrl?country=$country&apiKey=$_apiKey';
+    print('🌐 リクエストURL: $uri');
+    print('🔑 APIキー: $_apiKey');
 
-    // ─── 2) ステータスコードが 200（OK）かチェック ───
-    if (response.statusCode == 200) {
-      // JSONのデータを元のデータに戻す
-      // ─── 3) JSON 文字列を Dart の Map に変換
-      final jsonData = jsonDecode(response.body);
-      // ─── 4) 'articles' 配列を取り出して List<dynamic> に ─
-      // mapメソッドで、Map型のデータをListに変換する
-      // final List<dynamic> articlesJson = jsonData['記事一覧'];
-      final List<dynamic> articlesJson = jsonData['articles'] as List<dynamic>;
-      // ─── 5) Map → Article オブジェクトに変換し、List<Article> を返す ─
-      return articlesJson
-          .map((articleJson) => NewsDetailData.fromJson(articleJson))
-          .toList();
-    } else {
-      throw Exception('ニュースの取得に失敗しました');
+    try {
+      final http.Response response = await http.get(Uri.parse(uri));
+      print('📩 ステータスコード: ${response.statusCode}');
+      print('📦 レスポンスボディ: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List<dynamic> articlesJson =
+            jsonData['articles'] as List<dynamic>;
+        print('🟢 APIからの記事数: ${articlesJson.length}');
+        return articlesJson
+            .map((articleJson) => NewsDetailData.fromJson(articleJson))
+            .toList();
+      } else {
+        print('🛑 エラー: ステータスコード ${response.statusCode}');
+        throw Exception('ニュースの取得に失敗しました');
+      }
+    } catch (e) {
+      print('❌ 例外発生: $e');
+      throw Exception('通信エラーが発生しました');
     }
   }
 
-  // 詳細取得メソッドを追加
-
+  // 🔍 詳細取得メソッド（title検索）
   Future<NewsDetailData> getArticleDetailByTitle(String title) async {
     final uri = Uri.parse(
       '$_baseUrl'
@@ -50,12 +49,16 @@ class NewsApi {
       '&pageSize=1'
       '&apiKey=$_apiKey',
     );
+
     final http.Response response = await http.get(uri);
+    print('📩 ステータスコード: ${response.statusCode}');
+    print('📦 レスポンスボディ: ${response.body}');
     if (response.statusCode != 200) {
       throw Exception('ニュースの取得に失敗しました');
     }
     final jsonData = jsonDecode(response.body);
     final List<dynamic> articles = jsonData['articles'] as List<dynamic>;
+    print('🟢 APIからの記事数: ${articles.length}');
 
     if (articles.isEmpty) {
       throw Exception('該当する記事が見つかりませんでした');

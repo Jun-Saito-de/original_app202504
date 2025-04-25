@@ -32,7 +32,8 @@ class _NewsListPageState extends State<NewsListPage> {
   Widget build(BuildContext context) {
     // providerを参照する
     final provider = context.watch<ArticlesProvider>();
-    final list = provider.articles!;
+    final list = provider.articles;
+    print('🧪 provider.articles: $list');
 
     return Scaffold(
       appBar: AppBar(

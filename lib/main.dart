@@ -97,8 +97,7 @@ class _MyAppState extends State<MyApp> {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: Color.fromARGB(255, 245, 245, 245),
-            foregroundColor:
-                Colors.black, // ElevatedButton の文字色は foregroundColor で設定
+            foregroundColor: Colors.black,
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),

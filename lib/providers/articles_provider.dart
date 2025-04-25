@@ -13,8 +13,11 @@ class ArticlesProvider extends ChangeNotifier {
   Future<void> loadArticles() async {
     _isLoading = true; // API呼び出し前に読み込み開始
     notifyListeners();
+
+    print('🟡 loadArticles called');
     try {
       _articles = await NewsApi().loadNews(); // API呼び出し 記事を受け取る処理が終わるまで
+      print('🟢 loadNews success: ${_articles?.length} 件取得');
     } catch (e) {
       _articles = []; // エラー管理
     } finally {
