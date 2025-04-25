@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:news_app_202504/providers/articles_provider.dart';
+import 'package:news_app_202504/pages/news_list_page.dart';
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -93,7 +94,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                   SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NewsListPage(),
+                        ),
+                      );
+                    },
                     child: const Text(
                       'ニュース一覧へ',
                       style: TextStyle(

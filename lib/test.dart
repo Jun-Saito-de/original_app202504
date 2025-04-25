@@ -2,7 +2,6 @@ import 'dart:convert'; // JSON のエンコード／デコード機能を使う�
 import 'package:http/http.dart' as http; // ▶ HTTP リクエストを送る http パッケージをインポート
 import 'package:news_app_202504/models/article_list.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:news_app_202504/models/article_detail.dart'; // detail用のモデルをインポート
 
 // APIを使うクラス(// ニュース取得ロジックをまとめるクラス)
 
@@ -14,14 +13,15 @@ class NewsApi {
   static const String _baseUrl = 'https://newsapi.org/v2/top-headlines';
 
   // APIからデータを取得するメソッド（JSON読み込み関数）
-  Future<List<NewsDetailData>> loadNews({String country = 'us'}) async {
+  Future<List<NewsData>> loadNews({
+    String country = 'jp', // ▶ デフォルトは日本 (jp)
+  }) async {
     // getメソッドでデータを取得
     // parseメソッドの引数にURIのテキストを指定。このURIにhttpsが指定されていればhttpsでアクセスを行う
     // ─── 1) GET リクエストを送信 ─────────────────
     final http.Response response = await http.get(
-      Uri.parse('$_baseUrl?country=$country&apiKey=$_apiKey'),
+      Uri.parse('$_baseUrl?country=jp&apiKey=$_apiKey'),
     );
-
     // ─── 2) ステータスコードが 200（OK）かチェック ───
     if (response.statusCode == 200) {
       // JSONのデータを元のデータに戻す
@@ -33,33 +33,10 @@ class NewsApi {
       final List<dynamic> articlesJson = jsonData['articles'] as List<dynamic>;
       // ─── 5) Map → Article オブジェクトに変換し、List<Article> を返す ─
       return articlesJson
-          .map((articleJson) => NewsDetailData.fromJson(articleJson))
+          .map((articleJson) => NewsData.fromJson(articleJson))
           .toList();
     } else {
       throw Exception('ニュースの取得に失敗しました');
     }
-  }
-
-  // 詳細取得メソッドを追加
-
-  Future<NewsDetailData> getArticleDetailByTitle(String title) async {
-    final uri = Uri.parse(
-      '$_baseUrl'
-      '?country=us'
-      '&q=${Uri.encodeComponent(title)}'
-      '&pageSize=1'
-      '&apiKey=$_apiKey',
-    );
-    final http.Response response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('ニュースの取得に失敗しました');
-    }
-    final jsonData = jsonDecode(response.body);
-    final List<dynamic> articles = jsonData['articles'] as List<dynamic>;
-
-    if (articles.isEmpty) {
-      throw Exception('該当する記事が見つかりませんでした');
-    }
-    return NewsDetailData.fromJson(articles[0] as Map<String, dynamic>);
   }
 }

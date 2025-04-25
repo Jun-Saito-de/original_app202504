@@ -7,7 +7,7 @@
 class NewsData {
   // ── ニュース記事データの構造を定義する雛形（設計図）──
   // これらの項目を必ず持ったインスタンスを生成します
-  final String id;
+  // final String id;
   final String title;
   final String urlToImage;
   final String url;
@@ -15,7 +15,7 @@ class NewsData {
   // ── コンストラクタ ──
   // required で「必ず値を渡す」ことを保証します
   NewsData({
-    required this.id,
+    // required this.id,
     required this.title,
     required this.urlToImage,
     required this.url,
@@ -27,9 +27,8 @@ class NewsData {
   factory NewsData.fromJson(Map<String, dynamic> json) {
     // ここで JSON のキーとクラスのフィールドを紐づけ、文字列→String、日時なら文字列→DateTime.parse といった変換
     return NewsData(
-      id:
-          json['source']['id'] as String? ??
-          '', // as String? ?? '' で null 安全に空文字フォールバック
+      // id:json['source']['id'] as String? ??
+      //     '', // as String? ?? '' で null 安全に空文字フォールバック
       title: json['title'] as String,
       urlToImage:
           json['urlToImage'] as String? ??
