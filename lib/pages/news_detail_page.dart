@@ -4,6 +4,8 @@ import 'package:news_app_202504/models/article_detail.dart';
 import 'package:news_app_202504/pages/home_page.dart';
 import 'package:news_app_202504/pages/news_list_page.dart';
 import 'package:news_app_202504/services/api_service.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:news_app_202504/pages/favorite_list_page.dart';
 
 class NewsDetailPage extends StatefulWidget {
   final String title; // ← article_detail.dartからとってくる
@@ -20,6 +22,14 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   int _currentIndex = 0;
 
   final Set<String> _favoriteTitles = {}; // タイトルをキーにしてファボを登録
+
+  double _charSize = 16.0; // 文字サイズの変数を定義、現在の文字サイズ設定
+
+  @override
+  void _shareText() {
+    final text = '${widget.title}\n\n${_detail?.description ?? ''}';
+    Share.share(text);
+  }
 
   @override
   void initState() {
@@ -93,7 +103,23 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: <Widget>[
-                    IconButton(icon: Icon(Icons.text_fields), onPressed: () {}),
+                    IconButton(
+                      icon: Icon(Icons.text_fields),
+                      onPressed: () {
+                        setState(() {
+                          // もし文字サイズ16なら20に
+                          if (_charSize == 16.0) {
+                            _charSize = 20.0;
+                          } else if (_charSize == 20.0) {
+                            // もし文字サイズ20なら12に
+                            _charSize = 12.0;
+                          } else {
+                            // もし文字サイズ12もしくはそれ以外なら16に
+                            _charSize = 16.0;
+                          }
+                        });
+                      },
+                    ),
                     SizedBox(width: 12.0),
                     IconButton(
                       icon: Icon(
@@ -113,14 +139,20 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       },
                     ),
                     SizedBox(width: 12.0),
-                    IconButton(icon: Icon(Icons.share), onPressed: () {}),
+                    IconButton(
+                      icon: Icon(Icons.share),
+                      onPressed: () {
+                        print('シェアボタンが押されました！');
+                        _shareText();
+                      },
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 detail.description,
-                style: const TextStyle(fontSize: 16.0, height: 1.5),
+                style: TextStyle(fontSize: _charSize, height: 1.5),
               ),
             ],
           ),
@@ -142,12 +174,16 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
           } else if (index == 1) {
             Navigator.pop(context);
           }
-          // if (index == 2) {
-          //   // Navigator.push(
-          //   //   context,
-          //   //   MaterialPageRoute(builder: (context) => const NewsDetailPage()),
-          //   // );
-          // }
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        FavoriteListPage(favoriteTitles: _favoriteTitles),
+              ),
+            );
+          }
         },
       ),
     );

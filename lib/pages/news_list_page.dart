@@ -7,16 +7,19 @@ import 'package:news_app_202504/services/api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:news_app_202504/providers/articles_provider.dart';
 import 'package:news_app_202504/pages/news_detail_page.dart';
+import 'package:news_app_202504/pages/favorite_list_page.dart';
 
 class NewsListPage extends StatefulWidget {
-  const NewsListPage({Key? key}) : super(key: key);
+  final Set<String> favoriteTitles; // タイトルをキーにしてファボを登録
+  const NewsListPage({Key? key, required this.favoriteTitles})
+    : super(key: key);
 
   @override
   State<NewsListPage> createState() => _NewsListPageState();
 }
 
 class _NewsListPageState extends State<NewsListPage> {
-  final Set<int> _favoriteIndexes = {}; // 押されたら登録／解除する index の集合
+  // final Set<int> _favoriteIndexes = {}; // 押されたら登録／解除する index の集合
   int _currentIndex = 1;
 
   @override
@@ -66,7 +69,7 @@ class _NewsListPageState extends State<NewsListPage> {
           itemBuilder: (context, index) {
             final item = list[index];
             // 現在この行がお気に入り済みかどうか
-            final isFav = _favoriteIndexes.contains(index);
+            final isFav = widget.favoriteTitles.contains(item.title);
             return ListTile(
               leading:
                   item.urlToImage.isNotEmpty
@@ -98,9 +101,9 @@ class _NewsListPageState extends State<NewsListPage> {
                 onPressed: () {
                   setState(() {
                     if (isFav)
-                      _favoriteIndexes.remove(index);
+                      widget.favoriteTitles.remove(item.title);
                     else
-                      _favoriteIndexes.add(index);
+                      widget.favoriteTitles.add(item.title);
                   });
                 },
               ),
@@ -121,7 +124,7 @@ class _NewsListPageState extends State<NewsListPage> {
         currentIndex: _currentIndex,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'TOP'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: '一覧'),
+          // BottomNavigationBarItem(icon: Icon(Icons.book), label: '一覧'),
           BottomNavigationBarItem(icon: Icon(Icons.star), label: 'お気に入り'),
         ],
         onTap: (index) {
@@ -131,12 +134,16 @@ class _NewsListPageState extends State<NewsListPage> {
           if (index == 0) {
             Navigator.pop(context);
           }
-          // if (index == 2) {
-          //   // Navigator.push(
-          //   //   context,
-          //   //   MaterialPageRoute(builder: (context) => const NewsDetailPage()),
-          //   // );
-          // }
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        FavoriteListPage(favoriteTitles: widget.favoriteTitles),
+              ),
+            );
+          }
         },
       ),
     );

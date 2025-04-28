@@ -24,6 +24,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   var isDarkMode = false;
 
+  final Set<String> _favoriteTitles = {};
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,7 +100,9 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const NewsListPage(),
+                          builder:
+                              (context) =>
+                                  NewsListPage(favoriteTitles: _favoriteTitles),
                         ),
                       );
                     },
