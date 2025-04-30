@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:news_app_202504/models/article_detail.dart';
-import 'package:news_app_202504/pages/home_page.dart';
-import 'package:news_app_202504/pages/news_list_page.dart';
+import 'package:news_app_202504/models/news_detail_data.dart';
 import 'package:news_app_202504/services/api_service.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:news_app_202504/providers/favorites_provider.dart';
 import 'package:news_app_202504/pages/favorite_list_page.dart';
 
 class NewsDetailPage extends StatefulWidget {
-  final String title; // ← article_detail.dartからとってくる
+  final String title;
   const NewsDetailPage({Key? key, required this.title}) : super(key: key);
 
   @override
@@ -20,12 +19,8 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   bool _isLoading = true;
   String? _error;
   int _currentIndex = 0;
+  double _charSize = 16.0;
 
-  final Set<String> _favoriteTitles = {}; // タイトルをキーにしてファボを登録
-
-  double _charSize = 16.0; // 文字サイズの変数を定義、現在の文字サイズ設定
-
-  @override
   void _shareText() {
     final text = '${widget.title}\n\n${_detail?.description ?? ''}';
     Share.share(text);
@@ -59,95 +54,62 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
       return Center(child: Text('エラー: $_error'));
     }
     final detail = _detail!;
-
-    final isFav = _favoriteTitles.contains(
-      widget.title,
-    ); // ファボ登録記事がタイトルを含んでいたらisFavがtrue
+    final favProv = context.watch<FavoritesProvider>();
+    final isFav = favProv.favorites.contains(widget.title);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'NEWS EXPRESS',
-          style: TextStyle(
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
-            fontFamily: "LexendDeca",
-            letterSpacing: -0.5,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('NEWS EXPRESS'), centerTitle: true),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              // 記事タイトル
+            children: [
               Text(
                 widget.title,
-                style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               if (detail.urlToImage.isNotEmpty)
                 Image.network(
                   detail.urlToImage,
                   fit: BoxFit.cover,
-                  height: 200, // お好みで高さ指定
+                  height: 200,
                 ),
               const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    IconButton(
-                      icon: Icon(Icons.text_fields),
-                      onPressed: () {
-                        setState(() {
-                          // もし文字サイズ16なら20に
-                          if (_charSize == 16.0) {
-                            _charSize = 20.0;
-                          } else if (_charSize == 20.0) {
-                            // もし文字サイズ20なら12に
-                            _charSize = 12.0;
-                          } else {
-                            // もし文字サイズ12もしくはそれ以外なら16に
-                            _charSize = 16.0;
-                          }
-                        });
-                      },
-                    ),
-                    SizedBox(width: 12.0),
-                    IconButton(
-                      icon: Icon(
-                        isFav ? Icons.star : Icons.star_border,
-                        color:
-                            isFav
-                                ? Theme.of(context).colorScheme.secondary
-                                : Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          if (isFav)
-                            _favoriteTitles.remove(widget.title);
-                          else
-                            _favoriteTitles.add(widget.title);
-                        });
-                      },
-                    ),
-                    SizedBox(width: 12.0),
-                    IconButton(
-                      icon: Icon(Icons.share),
-                      onPressed: () {
-                        print('シェアボタンが押されました！');
-                        _shareText();
-                      },
-                    ),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.text_fields),
+                    onPressed: () {
+                      setState(() {
+                        if (_charSize == 16.0) {
+                          _charSize = 20.0;
+                        } else if (_charSize == 20.0) {
+                          _charSize = 12.0;
+                        } else {
+                          _charSize = 16.0;
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 12.0),
+                  IconButton(
+                    icon: Icon(isFav ? Icons.star : Icons.star_border),
+                    onPressed: () {
+                      favProv.toggle(widget.title);
+                    },
+                  ),
+                  const SizedBox(width: 12.0),
+                  IconButton(
+                    icon: const Icon(Icons.share),
+                    onPressed: _shareText,
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Text(
@@ -166,22 +128,15 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
           BottomNavigationBarItem(icon: Icon(Icons.star), label: 'お気に入り'),
         ],
         onTap: (index) {
-          setState(
-            () => _currentIndex = index, //押されたタブのインデックス更新
-          );
+          setState(() => _currentIndex = index);
           if (index == 0) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           } else if (index == 1) {
             Navigator.pop(context);
-          }
-          if (index == 2) {
+          } else if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder:
-                    (context) =>
-                        FavoriteListPage(favoriteTitles: _favoriteTitles),
-              ),
+              MaterialPageRoute(builder: (_) => const FavoriteListPage()),
             );
           }
         },

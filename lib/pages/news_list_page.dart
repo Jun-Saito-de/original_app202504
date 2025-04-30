@@ -6,13 +6,11 @@ import 'package:news_app_202504/pages/news_detail_page.dart';
 import 'package:news_app_202504/services/api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:news_app_202504/providers/articles_provider.dart';
-import 'package:news_app_202504/pages/news_detail_page.dart';
+import 'package:news_app_202504/providers/favorites_provider.dart';
 import 'package:news_app_202504/pages/favorite_list_page.dart';
 
 class NewsListPage extends StatefulWidget {
-  final Set<String> favoriteTitles; // タイトルをキーにしてファボを登録
-  const NewsListPage({Key? key, required this.favoriteTitles})
-    : super(key: key);
+  const NewsListPage({Key? key}) : super(key: key);
 
   @override
   State<NewsListPage> createState() => _NewsListPageState();
@@ -36,7 +34,9 @@ class _NewsListPageState extends State<NewsListPage> {
     // providerを参照する
     final provider = context.watch<ArticlesProvider>();
     final list = provider.articles;
-    print('🧪 provider.articles: $list');
+    final favProv = context.watch<FavoritesProvider>();
+
+    // print('🧪 provider.articles: $list');
 
     return Scaffold(
       appBar: AppBar(
@@ -68,8 +68,9 @@ class _NewsListPageState extends State<NewsListPage> {
           itemCount: list.length,
           itemBuilder: (context, index) {
             final item = list[index];
+            final isFav = favProv.favorites.contains(item.title);
             // 現在この行がお気に入り済みかどうか
-            final isFav = widget.favoriteTitles.contains(item.title);
+            // final isFav = widget.favoriteTitles.contains(item.title);
             return ListTile(
               leading:
                   item.urlToImage.isNotEmpty
@@ -99,12 +100,14 @@ class _NewsListPageState extends State<NewsListPage> {
                           : Colors.grey,
                 ),
                 onPressed: () {
-                  setState(() {
-                    if (isFav)
-                      widget.favoriteTitles.remove(item.title);
-                    else
-                      widget.favoriteTitles.add(item.title);
-                  });
+                  // setState(() {
+                  //   if (isFav)
+                  //     widget.favoriteTitles.remove(item.title);
+                  //   else
+                  //     widget.favoriteTitles.add(item.title);
+                  // });
+                  favProv.toggle(item.title);
+                  debugPrint('【List】Favorites now: ${favProv.favorites}');
                 },
               ),
               onTap: () {
@@ -112,7 +115,6 @@ class _NewsListPageState extends State<NewsListPage> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => NewsDetailPage(title: item.title),
-                    //(title: item.title),
                   ),
                 );
               },
@@ -134,14 +136,10 @@ class _NewsListPageState extends State<NewsListPage> {
           if (index == 0) {
             Navigator.pop(context);
           }
-          if (index == 2) {
+          if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder:
-                    (context) =>
-                        FavoriteListPage(favoriteTitles: widget.favoriteTitles),
-              ),
+              MaterialPageRoute(builder: (_) => const FavoriteListPage()),
             );
           }
         },

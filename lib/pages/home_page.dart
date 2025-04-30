@@ -1,15 +1,24 @@
+// home_page.dart: ホーム画面のウィジェット定義
+// HomePage はアプリのルートに近い画面で、main.dart からテーマ切替やタイトルなどの設定情報を受け取る
+// 記事一覧や詳細ページは Provider や Navigator 経由で必要な情報を取得するため、
+// コンストラクタでパラメータを渡す必要はありません
+// 例: 記事データは ArticlesProvider, お気に入り情報は FavoritesProvider から取得されるため
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:news_app_202504/providers/articles_provider.dart';
-import 'package:news_app_202504/pages/news_list_page.dart';
+import 'package:news_app_202504/pages/news_list_page.dart'; // ニュース一覧画面への遷移に使用
 
+// StatefulWidget を継承して、内部状態を持つホームページを定義
 class HomePage extends StatefulWidget {
-  final String title;
+  // main.dart から渡されるプロパティを定義
+  final String title; // AppBar やヘッダーで表示するタイトル
+  final bool isDarkMode; // 現在ダークモードが有効かどうか
+  final ValueChanged<bool> onThemeToggle; // テーマ変更イベントを親に伝えるコールバック
 
-  // mian.dartから渡された「今のモード」と「切替関数」をコンストラクタで受け取る
-  final bool isDarkMode;
-  final ValueChanged<bool> onThemeToggle;
-
+  // Widget を生成する際に必要な情報を親から受け取るコンストラクタ
+  // - Key? key: ウィジェット固有のキー。Flutter のウィジェットツリー管理に使われる
+  // - required this.title: 画面ヘッダーに表示するタイトル文字列を必須で受け取る
+  // - required this.isDarkMode: 現在ダークモードかどうかの初期状態を必須で受け取る
+  // - required this.onThemeToggle: テーマ切替スイッチが操作されたときのコールバック関数を必須で受け取る
   const HomePage({
     Key? key,
     required this.title,
@@ -22,87 +31,71 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  var isDarkMode = false;
-
-  final Set<String> _favoriteTitles = {};
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Theme.of(context).colorScheme.primary,
-      //   title: Text(
-      //     'NEWS EXPRESS',
-      //     style: TextStyle(
-      //       color: Theme.of(context).colorScheme.onPrimary,
-      //       fontSize: 24.0,
-      //       fontWeight: FontWeight.w800,
-      //       fontFamily: "LexendDeca",
-      //       letterSpacing: -0.5,
-      //     ),
-      //   ),
-      // ),
+      // SafeArea: デバイスのノッチやステータスバーを避ける
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.start, // 上から配置
+          crossAxisAlignment: CrossAxisAlignment.stretch, // 横いっぱいに広げる
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    greeting(), // 挨拶関数
-                    style: TextStyle(fontSize: 24),
-                  ), // 時間帯によって表示するメッセージを変える
-                  SizedBox(height: 16.0),
+                  // 挨拶テキスト
+                  Text(greeting(), style: const TextStyle(fontSize: 24)),
+                  const SizedBox(height: 16.0),
+
+                  // ダーク/ライトテーマ切替スイッチ
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Icon(Icons.sunny),
-                      SizedBox(width: 10),
+                      const Icon(Icons.sunny), // ライトのアイコン
+                      const SizedBox(width: 10),
                       Transform.scale(
-                        scale: 0.8,
+                        scale: 0.8, // スイッチを小さく表示
                         child: Switch(
-                          value: widget.isDarkMode, // 親の _mode == dark を反映
-                          onChanged:
-                              widget
-                                  .onThemeToggle, // 親の setState() を呼ぶ（親を更新 → アプリ再描画）
+                          // widget. は StatefulWidget のプロパティへのアクセスに必要
+                          value: widget.isDarkMode, // 親が渡したテーマ状態を反映
+                          onChanged: widget.onThemeToggle, // 親から渡されたコールバックを実行
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Icon(Icons.nightlight_round),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.nightlight_round), // ダークのアイコン
                     ],
                   ),
-                  SizedBox(height: 80.0),
-                  CircleAvatar(
+                  const SizedBox(height: 80.0),
+
+                  // ロゴやキャッチフレーズ
+                  const CircleAvatar(
                     radius: 60.0,
                     backgroundImage: AssetImage(
                       'assets/images/newsexpress_logo.png',
                     ),
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   Text(
-                    'NEWS EXPRESS',
+                    widget.title, // コンストラクタで渡されたタイトルを表示
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.primary, // テーマ色を使用
                       fontSize: 36.0,
                       fontWeight: FontWeight.bold,
-                      fontFamily: "LexendDeca",
+                      fontFamily: 'LexendDeca',
                       letterSpacing: -0.5,
                     ),
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
+
+                  // ニュース一覧へ遷移するボタン
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  NewsListPage(favoriteTitles: _favoriteTitles),
+                          builder: (context) => const NewsListPage(),
                         ),
                       );
                     },
@@ -123,21 +116,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _onThemeToggle(bool? value) {
-    setState(() {
-      isDarkMode = value!;
-    });
-  }
-
-  // 挨拶文のif文
+  // 時間帯に応じた挨拶を返すヘルパーメソッド
   String greeting() {
     final hour = DateTime.now().hour;
     if (hour >= 4 && hour <= 10) {
       return 'おはようございます！';
     } else if (hour >= 11 && hour <= 17) {
       return 'こんにちは！';
-    } else {
-      return 'こんばんは！';
     }
+    return 'こんばんは！';
   }
 }

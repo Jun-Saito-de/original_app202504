@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // 追加パッケージ
 import 'package:news_app_202504/main.dart';
-import 'package:news_app_202504/pages/news_list_page.dart';
+import 'package:news_app_202504/pages/home_page.dart';
 import 'package:news_app_202504/pages/news_detail_page.dart';
+import 'package:news_app_202504/services/api_service.dart';
+import 'package:provider/provider.dart';
+import 'package:news_app_202504/providers/articles_provider.dart';
+import 'package:news_app_202504/providers/favorites_provider.dart';
+import 'package:news_app_202504/pages/news_list_page.dart';
 
-class FavoriteListPage extends StatefulWidget {
+class FavoriteListPage extends StatelessWidget {
   // favoriteTitlesにWidget側でデータを受け取る
-  final Set<String> favoriteTitles;
+  // final Set<String> favoriteTitles;
   // FavoriteListPage WidgetにfavoriteTitlesを渡す
-  const FavoriteListPage({super.key, required this.favoriteTitles});
+  const FavoriteListPage({super.key});
 
-  @override
-  State<FavoriteListPage> createState() => _FavoriteListPageState();
-}
+  //   @override
+  //   State<FavoriteListPage> createState() => _FavoriteListPageState();
+  // }
 
-class _FavoriteListPageState extends State<FavoriteListPage> {
+  // class _FavoriteListPageState extends State<FavoriteListPage> {
+
   @override
   Widget build(BuildContext context) {
-    final favorites = widget.favoriteTitles.toList();
-
+    // final favProv = context.watch<FavoritesProvider>();
+    final favorites = context.watch<FavoritesProvider>().favorites.toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -34,13 +41,38 @@ class _FavoriteListPageState extends State<FavoriteListPage> {
       body:
           favorites.isEmpty
               ? const Center(child: Text('お気に入りがまだありません'))
-              : ListView(
-                children:
-                    widget.favoriteTitles.map((title) {
-                      // 子供クラスから親クラスのプロパティにアクセスするためwidget.をつける
-                      return ListTile(title: Text(title), onTap: () {});
-                    }).toList(),
+              : ListView.builder(
+                itemCount: favorites.length,
+                itemBuilder: (context, index) {
+                  final title = favorites[index];
+                  return ListTile(
+                    title: Text(title),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => NewsDetailPage(title: title),
+                        ),
+                      );
+                    },
+                  );
+                },
+                // 子供クラスから親クラスのプロパティにアクセスするためwidget.をつける
               ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'TOP'),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: '一覧へ戻る'),
+        ],
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          } else if (index == 1) {
+            Navigator.pop(context);
+          }
+        },
+      ),
     );
   }
 }

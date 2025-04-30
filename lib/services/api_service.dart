@@ -2,7 +2,7 @@ import 'dart:convert'; // JSON のエンコード／デコード機能を使う�
 import 'package:http/http.dart' as http; // ▶ HTTP リクエストを送る http パッケージをインポート
 import 'package:news_app_202504/models/article_list.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:news_app_202504/models/article_detail.dart'; // detail用のモデルをインポート
+import 'package:news_app_202504/models/news_detail_data.dart'; // detail用のモデルをインポート
 
 // APIを使うクラス(// ニュース取得ロジックをまとめるクラス)
 class NewsApi {

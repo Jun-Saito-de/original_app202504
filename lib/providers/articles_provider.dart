@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:news_app_202504/models/article_list.dart';
 import 'package:news_app_202504/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ArticlesProvider extends ChangeNotifier {
   final NewsApi _api = NewsApi();
@@ -16,7 +17,7 @@ class ArticlesProvider extends ChangeNotifier {
 
     print('🟡 loadArticles called');
     try {
-      _articles = await NewsApi().loadNews(); // API呼び出し 記事を受け取る処理が終わるまで
+      _articles = await _api.loadNews(); // API呼び出し 記事を受け取る処理が終わるまで
       print('🟢 loadNews success: ${_articles?.length} 件取得');
     } catch (e) {
       _articles = []; // エラー管理

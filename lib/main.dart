@@ -1,42 +1,51 @@
-import 'package:flutter/material.dart'; // flutter標準パッケージ
-import 'package:news_app_202504/providers/articles_provider.dart'; // プロバイダーの状態管理クラスを使うためのパッケージ
-import 'package:provider/provider.dart'; // 自作の状態管理クラスパッケージ
-import 'pages/home_page.dart'; // ホーム画面へ繋ぐために使う
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Flutter アプリ側で .env を読み込む
-import 'package:news_app_202504/services/api_service.dart'; // NewsAPI 呼び出しロジックのクラスを定義
+// main.dart: アプリ起動とテーマ切り替え、Provider設定を行うエントリポイント
 
-// main() 関数を async にして、アプリ起動前に環境変数を読み込むように変更（環境変数としてAPIキーを安全に扱うため）
+import 'package:flutter/material.dart';
+import 'package:news_app_202504/providers/articles_provider.dart';
+import 'package:news_app_202504/providers/favorites_provider.dart';
+import 'package:provider/provider.dart';
+import 'pages/home_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// main 関数は async にして、Flutter 実行前に .env から環境変数をロード
 Future<void> main() async {
-  // ① .env の読み込み
+  // Flutter のバインディングを初期化（非同期処理前に呼ぶ必要がある）
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // .env ファイルから API キーなどの環境変数を読み込む
   await dotenv.load(fileName: '.env');
+
+  // runApp で MultiProvider を使い、アプリ全体で Provider を提供
   runApp(
-    ChangeNotifierProvider(
-      // ArticlesProvider をアプリ全体で提供し、notifyListeners() でUI更新を可能にする
-      create: (_) => ArticlesProvider(),
-      child: const MyApp(), // アプリを起動
+    MultiProvider(
+      providers: [
+        // 記事一覧取得用 Provider
+        ChangeNotifierProvider(create: (_) => ArticlesProvider()),
+        // お気に入り管理用 Provider
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+      ],
+      // MyApp を子ウィジェットに渡す
+      child: const MyApp(),
     ),
   );
 }
 
+// MyApp は StatefulWidget で、テーマの状態（ライト/ダーク）を保持
 class MyApp extends StatefulWidget {
-  // テーマモードという状態（ライト／ダーク）を保持し、切り替えられるようにするため、StatefulWidget に変更
   const MyApp({super.key});
 
   @override
-  State<StatefulWidget> createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  // _mode という ThemeMode を用意＆切り替え関数を作る
-  // themeMode に渡す値を保持し、スイッチ操作で切り替える
-  ThemeMode _mode = ThemeMode.light; // 初期はライトモード
+  // _mode で現在のテーマモードを管理（初期はライト）
+  ThemeMode _mode = ThemeMode.light;
 
-  // Switch の操作で onChanged が呼ばれ、isDark に状態（true/false）が渡る
+  // トグルスイッチ操作時に呼ばれる。
+  // 引数 isDark はスイッチの新しい状態を表し、trueのときダークモード、falseのときライトモードに切り替えます。
   void _toggleTheme(bool isDark) {
-    // _toggleTheme(isDark) が呼ばれ、その isDark を元に _mode を更新
     setState(() {
-      // setState で再描画 → MaterialApp の themeMode に新しい _mode が反映
-      // _mode とは現在のモード（ThemeMode.light／ThemeMode.dark）のこと
       _mode = isDark ? ThemeMode.dark : ThemeMode.light;
     });
   }
@@ -44,22 +53,26 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // アプリのタイトル
       title: 'news express',
-      // ライト用カラー・ボタンスタイル
+
+      // ライトテーマ設定
       theme: ThemeData.light().copyWith(
-        // copyWith で双方のカスタムカラー＆ボタンを設定
-        scaffoldBackgroundColor: Colors.white, // ライトモード時の背景は白
-        colorScheme: ColorScheme(
-          primary: Color.fromARGB(255, 3, 72, 179),
-          onPrimary: Colors.white,
-          secondary: Color.fromARGB(255, 70, 165, 240),
-          onSecondary: Color.fromARGB(255, 30, 30, 30),
-          brightness: Brightness.light,
-          error: Colors.red,
+        // 背景色を白に固定
+        scaffoldBackgroundColor: Colors.white,
+        // カラースキームをライトテーマからコピーしてカスタム
+        colorScheme: ThemeData.light().colorScheme.copyWith(
+          primary: const Color.fromARGB(255, 3, 72, 179), // プライマリーカラー
+          onPrimary: Colors.white, // プライマリー上のテキスト色
+          secondary: const Color.fromARGB(255, 70, 165, 240), // アクセントカラー
+          onSecondary: const Color.fromARGB(255, 30, 30, 30),
+          brightness: Brightness.light, // 明るさをライト
+          error: Colors.red, // エラー色
           onError: Colors.white,
-          onSurface: Color.fromARGB(255, 30, 30, 30),
+          onSurface: const Color.fromARGB(255, 30, 30, 30),
           surface: Colors.white,
         ),
+        // ボタンの共通スタイル設定
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color.fromARGB(255, 230, 230, 230),
@@ -69,26 +82,28 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
         ),
+        // AppBar のスタイル
         appBarTheme: AppBarTheme(
-          backgroundColor: Color.fromARGB(255, 3, 72, 179), // プライマリーカラー
-          foregroundColor: ColorScheme.light().onPrimary, // タイトル文字色
+          backgroundColor: const Color.fromARGB(255, 3, 72, 179),
+          foregroundColor: ThemeData.light().colorScheme.onPrimary,
           elevation: 2,
         ),
+        // BottomNavigationBar のスタイル
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: Color.fromARGB(255, 3, 72, 179),
-          selectedItemColor: Colors.white, // 選択時アイコン色
-          unselectedItemColor: Colors.white, // 非選択アイコン色
+          backgroundColor: const Color.fromARGB(255, 3, 72, 179),
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white,
         ),
       ),
-      // ダーク用カラー・ボタンスタイル
+
+      // ダークテーマ設定（ライトと同様に copyWith でカスタム）
       darkTheme: ThemeData.dark().copyWith(
-        // copyWith で双方のカスタムカラー＆ボタンを設定
-        colorScheme: ColorScheme.dark(
+        colorScheme: ThemeData.dark().colorScheme.copyWith(
           primary: const Color.fromARGB(255, 245, 245, 245),
           onPrimary: Colors.black,
-          secondary: Color.fromARGB(255, 245, 245, 245),
-          onSecondary: Color.fromARGB(255, 30, 30, 30),
-          brightness: Brightness.light,
+          secondary: const Color.fromARGB(255, 245, 245, 245),
+          onSecondary: const Color.fromARGB(255, 30, 30, 30),
+          brightness: Brightness.dark,
           error: Colors.red,
           onError: Colors.white,
           onSurface: Colors.white,
@@ -96,7 +111,7 @@ class _MyAppState extends State<MyApp> {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color.fromARGB(255, 245, 245, 245),
+            backgroundColor: const Color.fromARGB(255, 245, 245, 245),
             foregroundColor: Colors.black,
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
@@ -105,21 +120,25 @@ class _MyAppState extends State<MyApp> {
           ),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: ColorScheme.dark().surface,
-          foregroundColor: ColorScheme.dark().onSurface,
+          backgroundColor: ThemeData.dark().colorScheme.surface,
+          foregroundColor: ThemeData.dark().colorScheme.onSurface,
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: ColorScheme.dark().surface,
-          selectedItemColor: ColorScheme.dark().onSurface,
-          unselectedItemColor: ColorScheme.dark().onSurface,
+          backgroundColor: ThemeData.dark().colorScheme.surface,
+          selectedItemColor: ThemeData.dark().colorScheme.onSurface,
+          unselectedItemColor: ThemeData.dark().colorScheme.onSurface,
         ),
       ),
-      themeMode: _mode, // _mode に応じて theme ⇄ darkTheme を切り替える。アプリ全体が再描画される
+
+      // 現在のモードに応じて theme または darkTheme を適用
+      themeMode: _mode,
+
+      // 最初に表示する画面は HomePage
       home: HomePage(
-        // HomePage に今のモードと切り替え関数を渡す
-        title: 'NEWS EXPRESS',
-        isDarkMode: _mode == ThemeMode.dark,
-        onThemeToggle: _toggleTheme, // テーマ切り替え用のコールバックを渡す
+        title: 'NEWS EXPRESS', // アプリバーやヘッダーで利用可能
+        isDarkMode: _mode == ThemeMode.dark, // スイッチの初期状態
+        onThemeToggle:
+            _toggleTheme, // HomePage から呼び出される関数。スイッチ操作時に渡される真偽値を元に _toggleTheme が実行される          // スイッチ操作時のコールバック
       ),
     );
   }
